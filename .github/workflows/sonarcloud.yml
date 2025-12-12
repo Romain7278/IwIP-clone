@@ -42,7 +42,7 @@ jobs:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         with:
           args: >
-            -Dsonar.organization=YOUR_REAL_ORG_KEY
+            -Dsonar.organization=romain7278
             -Dsonar.projectKey=Romain7278_IwIP-clone
             -Dsonar.projectBaseDir=.
             -Dsonar.sources=src
