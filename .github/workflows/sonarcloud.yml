@@ -22,20 +22,14 @@ jobs:
 
       - name: Build and run coverage harness
         run: |
+          rm -rf build
           cmake -S . -B build \
             -DCMAKE_BUILD_TYPE=Debug \
-            -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
+            -DCMAKE_EXPORT_COMPILE_COMMANDS=ON \
+            -DCMAKE_C_COMPILER=gcc \
+            -DCMAKE_CXX_COMPILER=g++
 
           cmake --build build
-
-          echo "Workspace:"
-          pwd
-          echo "compile_commands exists?"
-          ls -l build/compile_commands.json
-
-          echo "How many src/*.c entries?"
-          grep -c '"file": ".*/src/.*\.c"' build/compile_commands.json || true
-
           ./build/coverage_main
           gcovr -r . --filter src --sonarqube -o coverage.xml
 
