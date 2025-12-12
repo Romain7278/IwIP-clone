@@ -20,7 +20,7 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y build-essential gcovr
 
-            - name: Build and run unit tests with coverage
+      - name: Build and run unit tests with coverage
         run: |
           cd test/unit
           make clean
@@ -29,21 +29,14 @@ jobs:
           echo "Built files:"
           ls -la
 
-          echo "Running unit tests (try common outputs)..."
           if [ -x ./lwip_unittests ]; then
             ./lwip_unittests
-          elif [ -x ./lwip_unittests.exe ]; then
-            ./lwip_unittests.exe
-          elif [ -x ./run.sh ]; then
-            ./run.sh
           else
-            echo "Could not find test executable. Showing Makefile targets:"
-            make -n | tail -n 50
+            echo "lwip_unittests not found"
             exit 1
           fi
 
           gcovr -r ../../src --xml -o coverage.xml
-          echo "coverage.xml generated:"
           ls -l coverage.xml
 
       - name: SonarCloud Scan
