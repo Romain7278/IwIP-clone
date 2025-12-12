@@ -52,6 +52,6 @@ jobs:
             -Dsonar.projectBaseDir=/github/workspace
             -Dsonar.sources=src
             -Dsonar.cfamily.compile-commands=/github/workspace/build/compile_commands.json
-
-
+            -Dsonar.c.file.suffixes=.c
+            -Dsonar.cpp.file.suffixes=-
 
