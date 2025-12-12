@@ -15,28 +15,17 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Install build tools and gcovr
+      - name: Install dependencies
         run: |
-          sudo apt-get update
-          sudo apt-get install -y build-essential gcovr
+          sudo apt update
+          sudo apt install -y build-essential cmake gcovr
 
-      - name: Build and run unit tests with coverage
+      - name: Build and run coverage harness
         run: |
-          cd test/unit
-
-          # Some lwIP unit-test Makefiles don't define a 'clean' target
-          make clean || true
-
-          make CFLAGS="--coverage -O0 -g" LDFLAGS="--coverage"
-
-          echo "Built files:"
-          ls -la
-
-          # Run the test executable (adjust if your Makefile outputs a different name)
-          ./lwip_unittests
-
-          gcovr -r ../../src --xml -o coverage.xml
-          ls -l coverage.xml
+          cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug
+          cmake --build build
+          ./build/coverage_main
+          gcovr -r . --filter src --xml -o coverage.xml
 
       - name: SonarCloud Scan
         uses: SonarSource/sonarcloud-github-action@v3
@@ -47,5 +36,5 @@ jobs:
             -Dsonar.organization=Romain7278
             -Dsonar.projectKey=Romain7278_IwIP-clone
             -Dsonar.sources=src
-            -Dsonar.exclusions=test/**,doc/**,**/*.md,**/*.txt
-            -Dsonar.coverageReportPaths=test/unit/coverage.xml
+            -Dsonar.exclusions=test/**,doc/**,**/*.md
+            -Dsonar.coverageReportPaths=coverage.xml
