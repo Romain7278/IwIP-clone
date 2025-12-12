@@ -1,0 +1,59 @@
+name: SonarCloud CI
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+
+jobs:
+  sonarcloud:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install build tools and gcovr
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential gcovr
+
+            - name: Build and run unit tests with coverage
+        run: |
+          cd test/unit
+          make clean
+          make CFLAGS="--coverage -O0 -g" LDFLAGS="--coverage"
+
+          echo "Built files:"
+          ls -la
+
+          echo "Running unit tests (try common outputs)..."
+          if [ -x ./lwip_unittests ]; then
+            ./lwip_unittests
+          elif [ -x ./lwip_unittests.exe ]; then
+            ./lwip_unittests.exe
+          elif [ -x ./run.sh ]; then
+            ./run.sh
+          else
+            echo "Could not find test executable. Showing Makefile targets:"
+            make -n | tail -n 50
+            exit 1
+          fi
+
+          gcovr -r ../../src --xml -o coverage.xml
+          echo "coverage.xml generated:"
+          ls -l coverage.xml
+
+      - name: SonarCloud Scan
+        uses: SonarSource/sonarcloud-github-action@v3
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        with:
+          args: >
+            -Dsonar.organization=Romain7278
+            -Dsonar.projectKey=Romain7278_IwIP-clone
+            -Dsonar.sources=src
+            -Dsonar.exclusions=test/**,doc/**,**/*.md,**/*.txt
+            -Dsonar.coverageReportPaths=test/unit/coverage.xml
