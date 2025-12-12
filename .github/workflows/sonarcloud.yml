@@ -22,7 +22,7 @@ jobs:
 
       - name: Build and run coverage harness
         run: |
-          cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug
+          cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
           cmake --build build
           ./build/coverage_main
           gcovr -r . --filter src --sonarqube -o coverage.xml
@@ -33,9 +33,11 @@ jobs:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         with:
           args: >
-            -Dsonar.organization=romain7278
+            -Dsonar.organization=YOUR_REAL_ORG_KEY
             -Dsonar.projectKey=Romain7278_IwIP-clone
             -Dsonar.sources=src
             -Dsonar.exclusions=test/**,doc/**,**/*.md
             -Dsonar.coverageReportPaths=coverage.xml
+            -Dsonar.cfamily.compile-commands=build/compile_commands.json
+
 
