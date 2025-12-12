@@ -20,17 +20,20 @@ jobs:
           sudo apt update
           sudo apt install -y build-essential cmake gcovr
 
-      - name: Build and run coverage harness
+            - name: Build and run coverage harness
         run: |
           cmake -S . -B build \
             -DCMAKE_BUILD_TYPE=Debug \
             -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
+
           cmake --build build
 
-          # sanity checks
+          echo "Workspace:"
           pwd
+          echo "compile_commands exists?"
           ls -l build/compile_commands.json
-          head -n 5 build/compile_commands.json
+
+          echo "How many src/*.c entries?"
           grep -c '"file": ".*/src/.*\.c"' build/compile_commands.json || true
 
           ./build/coverage_main
@@ -49,5 +52,9 @@ jobs:
             -Dsonar.exclusions=test/**,doc/**,**/*.md
             -Dsonar.coverageReportPaths=coverage.xml
             -Dsonar.cfamily.compile-commands=build/compile_commands.json
+            -Dsonar.projectBaseDir=/github/workspace
+            -Dsonar.sources=src
+            -Dsonar.cfamily.compile-commands=/github/workspace/build/compile_commands.json
+
 
 
