@@ -33,7 +33,7 @@ jobs:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         with:
           args: >
-            -Dsonar.organization=Romain7278
+            -Dsonar.organization=romain7278
             -Dsonar.projectKey=Romain7278_IwIP-clone
             -Dsonar.sources=src
             -Dsonar.exclusions=test/**,doc/**,**/*.md
