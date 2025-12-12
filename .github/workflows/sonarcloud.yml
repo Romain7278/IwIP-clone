@@ -23,18 +23,17 @@ jobs:
       - name: Build and run unit tests with coverage
         run: |
           cd test/unit
-          make clean
+
+          # Some lwIP unit-test Makefiles don't define a 'clean' target
+          make clean || true
+
           make CFLAGS="--coverage -O0 -g" LDFLAGS="--coverage"
 
           echo "Built files:"
           ls -la
 
-          if [ -x ./lwip_unittests ]; then
-            ./lwip_unittests
-          else
-            echo "lwip_unittests not found"
-            exit 1
-          fi
+          # Run the test executable (adjust if your Makefile outputs a different name)
+          ./lwip_unittests
 
           gcovr -r ../../src --xml -o coverage.xml
           ls -l coverage.xml
