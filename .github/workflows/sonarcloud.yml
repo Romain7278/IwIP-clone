@@ -38,3 +38,4 @@ jobs:
             -Dsonar.sources=src
             -Dsonar.exclusions=test/**,doc/**,**/*.md
             -Dsonar.coverageReportPaths=coverage.xml
+
