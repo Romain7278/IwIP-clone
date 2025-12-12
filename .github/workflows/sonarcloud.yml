@@ -29,6 +29,9 @@ jobs:
             -DCMAKE_C_COMPILER=gcc \
             -DCMAKE_CXX_COMPILER=g++
 
+          ls -l build/compile_commands.json
+          head -n 20 build/compile_commands.json
+
           cmake --build build
           ./build/coverage_main
           gcovr -r . --filter src --sonarqube -o coverage.xml
