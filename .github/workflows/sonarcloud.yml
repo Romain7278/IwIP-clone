@@ -15,7 +15,7 @@ jobs:
         with:
           fetch-depth: 0
 
-            - name: Install dependencies
+      - name: Install dependencies
         run: |
           sudo apt update
           sudo apt install -y build-essential cmake gcovr unzip curl
