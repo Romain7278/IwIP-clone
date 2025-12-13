@@ -32,7 +32,7 @@ jobs:
           CC: gcc
           CXX: g++
         run: |
-          cd /github/workspace
+          cd "${GITHUB_WORKSPACE}"
           rm -rf build bw-output
           cmake -S . -B build \
             -DCMAKE_BUILD_TYPE=Debug \
@@ -46,12 +46,9 @@ jobs:
           CC: gcc
           CXX: g++
         run: |
-          cd /github/workspace
+          cd "${GITHUB_WORKSPACE}"
           ./build-wrapper-linux-x86/build-wrapper-linux-x86-64 --out-dir bw-output cmake --build build
-
-          echo "compile DB path roots:"
           head -n 5 bw-output/compile_commands.json
-
           ./build/coverage_main
           gcovr -r . --filter src --sonarqube -o coverage.xml
 
@@ -63,8 +60,8 @@ jobs:
           args: >
             -Dsonar.organization=romain7278
             -Dsonar.projectKey=Romain7278_IwIP-clone
-            -Dsonar.projectBaseDir=/github/workspace
+            -Dsonar.projectBaseDir=${{ github.workspace }}
+            -Dsonar.cfamily.compile-commands=bw-output/compile_commands.json
             -Dsonar.sources=src
             -Dsonar.exclusions=test/**,doc/**,**/*.md
-            -Dsonar.cfamily.compile-commands=bw-output/compile_commands.json
             -Dsonar.coverageReportPaths=coverage.xml
