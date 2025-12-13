@@ -31,9 +31,11 @@ jobs:
           rm -rf build bw-output
           cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug -DCMAKE_C_COMPILER=gcc
 
-      - name: Build (wrapped) + run + generate coverage
+      - name: Build (wrapped) + run + coverage
         run: |
           ./build-wrapper-linux-x86/build-wrapper-linux-x86-64 --out-dir bw-output cmake --build build
+          ls -la bw-output
+          ls -la bw-output/compile_commands.json
           ./build/coverage_main
           gcovr -r . --filter src --sonarqube -o coverage.xml
 
@@ -47,5 +49,5 @@ jobs:
             -Dsonar.projectKey=Romain7278_IwIP-clone
             -Dsonar.sources=src
             -Dsonar.exclusions=test/**,doc/**,**/*.md
-            -Dsonar.cfamily.build-wrapper-output=bw-output
+            -Dsonar.cfamily.compile-commands=bw-output/compile_commands.json
             -Dsonar.coverageReportPaths=coverage.xml
