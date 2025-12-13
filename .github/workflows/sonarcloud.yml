@@ -1,67 +1,33 @@
-name: SonarCloud
+name: Coverage (CI)
 
 on:
   push:
-    branches:
-      - main
+    branches: [ "main" ]
   pull_request:
 
 jobs:
-  sonarcloud:
+  coverage:
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout sources
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
 
       - name: Install dependencies
         run: |
           sudo apt update
-          sudo apt install -y build-essential cmake gcovr unzip curl
+          sudo apt install -y build-essential cmake gcovr
 
-      - name: Download Sonar build-wrapper
+      - name: Build + run + generate coverage.xml
         run: |
-          curl -sSLo bw.zip https://sonarcloud.io/static/cpp/build-wrapper-linux-x86.zip
-          unzip -q bw.zip
-          chmod +x build-wrapper-linux-x86/build-wrapper-linux-x86-64
-
-      - name: Configure (force gcc, disable launchers)
-        env:
-          CC: gcc
-          CXX: g++
-        run: |
-          cd "${GITHUB_WORKSPACE}"
-          rm -rf build bw-output
-          cmake -S . -B build \
-            -DCMAKE_BUILD_TYPE=Debug \
-            -DCMAKE_C_COMPILER=gcc \
-            -DCMAKE_CXX_COMPILER=g++ \
-            -DCMAKE_C_COMPILER_LAUNCHER= \
-            -DCMAKE_CXX_COMPILER_LAUNCHER=
-
-      - name: Build (wrapped) + run + generate coverage
-        env:
-          CC: gcc
-          CXX: g++
-        run: |
-          cd "${GITHUB_WORKSPACE}"
-          ./build-wrapper-linux-x86/build-wrapper-linux-x86-64 --out-dir bw-output cmake --build build
-          head -n 5 bw-output/compile_commands.json
+          rm -rf build
+          cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug -DCMAKE_C_COMPILER=gcc
+          cmake --build build
           ./build/coverage_main
           gcovr -r . --filter src --sonarqube -o coverage.xml
+          ls -l coverage.xml
 
-      - name: SonarCloud Scan
-        uses: SonarSource/sonarcloud-github-action@v3
-        env:
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+      - name: Upload coverage.xml
+        uses: actions/upload-artifact@v4
         with:
-          args: >
-            -Dsonar.organization=romain7278
-            -Dsonar.projectKey=Romain7278_IwIP-clone
-            -Dsonar.projectBaseDir=${{ github.workspace }}
-            -Dsonar.cfamily.compile-commands=bw-output/compile_commands.json
-            -Dsonar.sources=src
-            -Dsonar.exclusions=test/**,doc/**,**/*.md
-            -Dsonar.coverageReportPaths=coverage.xml
+          name: coverage-report
+          path: coverage.xml
