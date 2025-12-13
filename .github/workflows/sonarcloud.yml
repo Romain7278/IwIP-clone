@@ -32,6 +32,7 @@ jobs:
           CC: gcc
           CXX: g++
         run: |
+          cd /github/workspace
           rm -rf build bw-output
           cmake -S . -B build \
             -DCMAKE_BUILD_TYPE=Debug \
@@ -45,16 +46,14 @@ jobs:
           CC: gcc
           CXX: g++
         run: |
+          cd /github/workspace
           ./build-wrapper-linux-x86/build-wrapper-linux-x86-64 --out-dir bw-output cmake --build build
 
-          echo "Sanity check: compile DB produced by build-wrapper"
-          ls -ლა bw-output || true
-          test -f bw-output/compile_commands.json && echo "OK: bw-output/compile_commands.json exists"
-          head -n 20 bw-output/compile_commands.json
+          echo "compile DB path roots:"
+          head -n 5 bw-output/compile_commands.json
 
           ./build/coverage_main
           gcovr -r . --filter src --sonarqube -o coverage.xml
-          ls -l coverage.xml
 
       - name: SonarCloud Scan
         uses: SonarSource/sonarcloud-github-action@v3
