@@ -1,38 +1,22 @@
-name: SonarCloud CI
-
-on:
-  push:
-    branches: [ "main" ]
-  pull_request:
-
-jobs:
-  sonarcloud:
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
       - name: Install dependencies
         run: |
           sudo apt update
-          sudo apt install -y build-essential cmake gcovr
+          sudo apt install -y build-essential cmake gcovr unzip curl
 
-      - name: Build and run coverage harness
+      - name: Download Sonar build-wrapper
         run: |
-          rm -rf build
-          cmake -S . -B build \
-            -DCMAKE_BUILD_TYPE=Debug \
-            -DCMAKE_EXPORT_COMPILE_COMMANDS=ON \
-            -DCMAKE_C_COMPILER=gcc \
-            -DCMAKE_CXX_COMPILER=g++
+          curl -sSLo bw.zip https://sonarcloud.io/static/cpp/build-wrapper-linux-x86.zip
+          unzip -q bw.zip
+          chmod +x build-wrapper-linux-x86/build-wrapper-linux-x86-64
 
-          ls -l build/compile_commands.json
-          head -n 20 build/compile_commands.json
+      - name: Configure
+        run: |
+          rm -rf build bw-output
+          cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug -DCMAKE_C_COMPILER=gcc
 
-          cmake --build build
+      - name: Build (wrapped) + run + generate coverage
+        run: |
+          ./build-wrapper-linux-x86/build-wrapper-linux-x86-64 --out-dir bw-output cmake --build build
           ./build/coverage_main
           gcovr -r . --filter src --sonarqube -o coverage.xml
 
@@ -44,14 +28,7 @@ jobs:
           args: >
             -Dsonar.organization=romain7278
             -Dsonar.projectKey=Romain7278_IwIP-clone
-            -Dsonar.projectBaseDir=.
             -Dsonar.sources=src
             -Dsonar.exclusions=test/**,doc/**,**/*.md
+            -Dsonar.cfamily.build-wrapper-output=bw-output
             -Dsonar.coverageReportPaths=coverage.xml
-            -Dsonar.cfamily.compile-commands=build/compile_commands.json
-            -Dsonar.projectBaseDir=/github/workspace
-            -Dsonar.sources=src
-            -Dsonar.cfamily.compile-commands=/github/workspace/build/compile_commands.json
-            -Dsonar.c.file.suffixes=.c
-            -Dsonar.cpp.file.suffixes=-
-
