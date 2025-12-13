@@ -1,8 +1,9 @@
-name: SonarCloud CI
+name: SonarCloud
 
 on:
   push:
-    branches: [ "main" ]
+    branches:
+      - main
   pull_request:
 
 jobs:
@@ -10,7 +11,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
+      - name: Checkout sources
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
@@ -26,18 +27,34 @@ jobs:
           unzip -q bw.zip
           chmod +x build-wrapper-linux-x86/build-wrapper-linux-x86-64
 
-      - name: Configure
+      - name: Configure (force gcc, disable launchers)
+        env:
+          CC: gcc
+          CXX: g++
         run: |
           rm -rf build bw-output
-          cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug -DCMAKE_C_COMPILER=gcc
+          cmake -S . -B build \
+            -DCMAKE_BUILD_TYPE=Debug \
+            -DCMAKE_C_COMPILER=gcc \
+            -DCMAKE_CXX_COMPILER=g++ \
+            -DCMAKE_C_COMPILER_LAUNCHER= \
+            -DCMAKE_CXX_COMPILER_LAUNCHER=
 
-      - name: Build (wrapped) + run + coverage
+      - name: Build (wrapped) + run + generate coverage
+        env:
+          CC: gcc
+          CXX: g++
         run: |
           ./build-wrapper-linux-x86/build-wrapper-linux-x86-64 --out-dir bw-output cmake --build build
-          ls -la bw-output
-          ls -la bw-output/compile_commands.json
+
+          echo "Sanity check: compile DB produced by build-wrapper"
+          ls -ლა bw-output || true
+          test -f bw-output/compile_commands.json && echo "OK: bw-output/compile_commands.json exists"
+          head -n 20 bw-output/compile_commands.json
+
           ./build/coverage_main
           gcovr -r . --filter src --sonarqube -o coverage.xml
+          ls -l coverage.xml
 
       - name: SonarCloud Scan
         uses: SonarSource/sonarcloud-github-action@v3
@@ -47,6 +64,7 @@ jobs:
           args: >
             -Dsonar.organization=romain7278
             -Dsonar.projectKey=Romain7278_IwIP-clone
+            -Dsonar.projectBaseDir=/github/workspace
             -Dsonar.sources=src
             -Dsonar.exclusions=test/**,doc/**,**/*.md
             -Dsonar.cfamily.compile-commands=bw-output/compile_commands.json
